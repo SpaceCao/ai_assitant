@@ -1,0 +1,12 @@
+intent_name_cn,intent_code,target_agent,collaboration_mode,description,examples,priority,enabled
+"商品推荐","view_items","商推Agent","single","用户希望获得商品推荐或场景推荐。","帮我推荐点零食；送长辈买什么；有什么适合追剧吃的","100","true"
+"查询购物车","view_shop_cart","交易Agent","single","用户希望查看当前购物车商品列表。","看看我的购物车；购物车里有什么；查询购物车","95","true"
+"添加购物车","add_shop_cart","交易Agent","serial","用户希望将商品加入购物车。","这个加购物车；把刚才推荐的都加上；来两件这个","100","true"
+"删除购物车","del_shop_cart","交易Agent","single","用户希望删除购物车中的某个商品。","把这个从购物车删掉；删除购物车里的薯片；移除这件商品","85","true"
+"清空购物车","clear_shop_cart","交易Agent","single","用户希望清空购物车中的全部商品。","清空购物车；把购物车都删了；全部不要了","80","true"
+"确认订单","confirm_order","交易Agent","serial","用户确认商品信息后，希望进入下单确认流程。","确认订单；就这些确认一下；去确认订单","90","true"
+"立即下单","place_order_oow","交易Agent","serial","用户希望搜索商品并直接下单。","直接下单；现在就买；立即下单","100","true"
+"取消订单","cancel_order","交易Agent","single","用户希望取消指定订单。","取消这个订单；帮我退掉这单；我要取消订单","75","true"
+"查询订单","query_order","交易Agent","single","用户希望查询订单信息，包含订单状态或订单详情。","我的订单；查询订单；订单状态怎么样","95","true"
+"知识问答","knowledge_quiz","问答Agent","single","用户希望咨询 FAQ、商品知识或规则问题。","会员有什么权益；这个配料是什么；运费怎么算","85","true"
+"闲聊回复","casual_reply","闲聊Agent","single","用户进行非业务闲聊、寒暄或感谢。","你好；谢谢；在吗","0","true"

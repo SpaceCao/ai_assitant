@@ -1,0 +1,46 @@
+{
+  "name": "来伊份导购助手",
+  "version": "3.0",
+  "description": "基于字节 HiAgent 平台的意图识别智能体实施 Wiki",
+  "pages": [
+    {
+      "name": "Home",
+      "file": "wiki/Home.md",
+      "title": "首页",
+      "description": "入口页面，快速导航与架构概览"
+    },
+    {
+      "name": "HiAgent意图识别测试用例表",
+      "file": "wiki/HiAgent意图识别测试用例表.md",
+      "title": "HiAgent意图识别测试用例表",
+      "description": "用于意图识别流程调试和回归的测试用例清单"
+    },
+    {
+      "name": "HiAgent意图识别最终交付说明",
+      "file": "wiki/HiAgent意图识别最终交付说明.md",
+      "title": "HiAgent意图识别最终交付说明",
+      "description": "汇总全部交付物并说明推荐使用顺序"
+    },
+    {
+      "name": "HiAgent意图映射文档",
+      "file": "wiki/HiAgent意图映射文档.md",
+      "title": "HiAgent意图映射文档",
+      "description": "严格依据 1.3、2.0、2.3 三章整理的正式意图映射口径"
+    },
+    {
+      "name": "HiAgent意图识别平台配置字段表",
+      "file": "wiki/HiAgent意图识别平台配置字段表.md",
+      "title": "HiAgent意图识别平台配置字段表",
+      "description": "将平台关键配置收敛为可直接复制的字段表"
+    }
+  ],
+  "decisionTree": {
+    "question": "需求分析",
+    "branches": [
+      {"condition": "私有知识？", "target": "知识库与 RAG"},
+      {"condition": "实时数据/外部动作？", "target": "插件与 MCP"},
+      {"condition": "固定流程？", "target": "工作流"},
+      {"condition": "任务类型差异大？", "target": "多智能体"}
+    ]
+  }
+}
