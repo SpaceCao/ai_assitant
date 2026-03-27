@@ -223,7 +223,7 @@
 
 - 这是最核心的串行范式
 - 当前轮建议只执行主意图
-- 后续动作保留在 `intents_analysis` 中，交给后续轮或嵌套工作流继续处理
+- 后续动作保留在 `execution_plan.root` 中，交给后续轮或嵌套工作流继续处理
 
 ### 6.5 范式 E：交易域内部串行
 
@@ -278,11 +278,11 @@
 
 | 模板ID | 模板名称 | 触发条件 | 主 Agent | 嵌套 / 协作 Agent | 输入 | 输出 | 首版是否建议上线 |
 |--------|----------|----------|----------|-------------------|------|------|------------------|
-| T01 | 单智能体直达 | `intents_analysis` 仅命中 1 个稳定业务意图 | 交易Agent / 问答Agent / 闲聊Agent / 商推Agent | 无 | `primary_intent_code` + 用户原始输入 | 单个业务结果 | 是 |
+| T01 | 单智能体直达 | `execution_plan.root` 仅包含 1 个稳定 intent 节点 | 交易Agent / 问答Agent / 闲聊Agent / 商推Agent | 无 | `primary_intent_code` + 用户原始输入 | 单个业务结果 | 是 |
 | T02 | 推荐增强 | 主意图为 `view_items`，且推荐需要用户偏好增强 | 商推Agent | 用户Agent | 用户输入 + 用户标签/画像 | 增强后的推荐结果 | 是 |
 | T03 | 推荐问答嵌套 | 主意图为 `view_items`，且推荐结果需要补商品知识 | 商推Agent | 问答Agent | 用户输入 + 推荐候选商品 | 推荐结果 + 商品知识说明 | 是 |
-| T04 | 推荐到交易串行 | `intents_analysis` 中同时存在 `view_items` 与交易域动作 | 商推Agent | 交易Agent | 推荐诉求 + 后续交易意图 | 推荐结果或后续串行执行上下文 | 否，建议二期 |
-| T05 | 交易域内部串行 | `intents_analysis` 中命中多个交易意图 | 交易Agent | 交易Agent 内部子流程 | 主交易意图 + 其余交易意图列表 | 交易执行结果 + 后续待执行动作 | 是 |
+| T04 | 推荐到交易串行 | `execution_plan.root` 中同时存在 `view_items` 与交易域后续动作 | 商推Agent | 交易Agent | 推荐诉求 + 后续交易意图 | 推荐结果或后续串行执行上下文 | 否，建议二期 |
+| T05 | 交易域内部串行 | `execution_plan.root` 中命中多个交易意图 | 交易Agent | 交易Agent 内部子流程 | 主交易意图 + 其余交易结构 | 交易执行结果 + 后续待执行动作 | 是 |
 | T06 | 澄清兜底 | `need_clarify=true` 或多意图先后无法稳定判断 | 意图Agent | 无 | 用户输入 + 澄清问题 | 澄清后的新输入 | 是 |
 
 ### 7.1 模板 T01：单智能体直达
@@ -355,7 +355,7 @@
 ```text
 意图识别
   -> 主意图优先执行
-  -> 其余意图保留在 intents_analysis
+  -> 其余意图保留在 execution_plan.root
   -> 后续轮或后续嵌套工作流继续执行
 ```
 
@@ -363,7 +363,7 @@
 
 - 这是典型多意图串行范式
 - 但首版不建议一步做完到底
-- 建议首版只落主意图，其余意图保留在 `intents_analysis`
+- 建议首版只落主意图，其余意图保留在 `execution_plan.root`
 
 ### 7.5 模板 T05：交易域内部串行
 
@@ -378,7 +378,7 @@
 ```text
 意图识别
   -> 交易Agent 主流程
-  -> 交易Agent 内部根据 intents_analysis 再决定后续动作
+  -> 交易Agent 内部根据 execution_plan.root 再决定后续动作
 ```
 
 说明：
@@ -517,7 +517,7 @@ Start
 
 ```text
 当前轮先执行 primary_intent_code
-其余动作保留在 intents_analysis
+其余动作保留在 execution_plan.root
 后续轮或子工作流继续执行
 ```
 
@@ -539,7 +539,7 @@ Start
 节点说明：
 
 - 首层只路由到 `交易Agent`
-- 交易域内部再依据 `primary_intent_code` 和 `intents_analysis` 决定后续动作
+- 交易域内部再依据 `primary_intent_code` 和 `execution_plan.root` 决定后续动作
 - 这是最适合沉淀成“交易子工作流”的模板
 
 ### 8.6 模板 T06：澄清兜底
@@ -697,16 +697,23 @@ P2 阶段：
   "need_clarify": false,
   "clarify_question": "",
   "reason_text": "用户当前主意图是商品推荐。",
-  "intents_analysis": [
-    {
-      "intent_name_cn": "商品推荐",
-      "intent_code": "view_items",
-      "target_agent": "商推Agent",
-      "collaboration_mode": "single",
-      "rank": 1,
-      "reason_text": "用户明确表达了推荐商品诉求。"
+  "execution_plan": {
+    "version": "2.0",
+    "root": {
+      "node_type": "group",
+      "run_mode": "serial",
+      "children": [
+        {
+          "node_type": "intent",
+          "intent_name_cn": "商品推荐",
+          "intent_code": "view_items",
+          "target_agent": "商推Agent",
+          "collaboration_mode": "single",
+          "reason_text": "用户明确表达了推荐商品诉求。"
+        }
+      ]
     }
-  ]
+  }
 }
 ```
 
@@ -715,7 +722,7 @@ P2 阶段：
 - `intent_code` 严格采用 2.0 中定义
 - `target_agent` 严格采用 1.3 中定义
 - `collaboration_mode` 严格采用 2.3 中定义
-- `intents_analysis` 用于保留完整多意图结构
+- `execution_plan.root` 用递归树保留完整多意图结构
 - `primary_intent_code` 用于当前轮路由
 
 ## 12. 可维护性建议

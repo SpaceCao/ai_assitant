@@ -31,33 +31,41 @@
 | 字段名 | 类型 | 含义 |
 | --- | --- | --- |
 | `version` | string | 执行计划结构版本号，用于下游兼容处理。 |
-| `mode` | string | 当前轮整体执行模式；当前阶段只输出单智能体或串行，无法判断时输出空字符串。 |
-| `steps` | array[object] | 下游实际执行步骤列表。 |
+| `root` | object | 执行计划根节点，用递归树方式表达串行、并行和嵌套关系。 |
 
-## 4. execution_plan.steps 子字段
+## 4. execution_plan.root / group 节点子字段
 
 | 字段名 | 类型 | 含义 |
 | --- | --- | --- |
-| `step_no` | number | 执行步骤顺序号。 |
+| `node_type` | string | 节点类型；用于区分当前节点是编排组节点还是意图叶子节点。 |
+| `run_mode` | string | 当前组节点内部子节点的执行方式，用于表达串行或并行。 |
+| `children` | array[object] | 当前组节点的子节点列表；子节点既可以是组节点，也可以是意图节点。 |
+
+## 5. execution_plan.root.children 中的 intent 节点子字段
+
+| 字段名 | 类型 | 含义 |
+| --- | --- | --- |
+| `node_type` | string | 节点类型；用于标识当前节点是一个可直接执行的意图节点。 |
 | `intent_name_cn` | string | 该执行步骤对应的意图中文名称。 |
 | `intent_code` | string | 该执行步骤对应的意图编码。 |
 | `target_agent` | string | 该执行步骤对应的目标智能体。 |
 | `collaboration_mode` | string | 该执行步骤对应的协作模式。 |
 | `reason_text` | string | 该执行步骤被纳入执行计划的原因说明。 |
 
-## 5. execution_plan 标准规则
+## 6. execution_plan 标准规则
 
 | 规则项 | 含义 |
 | --- | --- |
-| `execution_plan.mode=single` | 表示当前轮只需执行一个主步骤，下游可按单智能体直达处理。 |
-| `execution_plan.mode=serial` | 表示当前轮存在明确先后顺序，下游应按 `step_no` 依次执行。 |
-| `execution_plan.mode=""` | 表示当前轮无法稳定判断第一执行步，需要先向用户澄清。 |
-| `steps.step_no` | 用于表达执行顺序；数字越小表示越早执行。 |
-| `primary_intent_code` | 应与 `execution_plan.steps` 的首个主执行意图保持一致。 |
-| `execution_plan.steps` | 同时承载识别结果与执行顺序，是下游优先消费的结构化字段。 |
-| `parallel` | 保留为后续扩展能力，当前阶段不作为首轮标准输出。 |
+| `node_type=group` | 表示当前节点是编排节点，只负责表达子节点之间的执行关系。 |
+| `node_type=intent` | 表示当前节点是叶子执行节点，可直接路由到对应目标智能体。 |
+| `run_mode=serial` | 表示当前组节点内的 `children` 按数组顺序依次执行。 |
+| `run_mode=parallel` | 表示当前组节点内的 `children` 可并行执行。 |
+| `children` | 通过节点嵌套表达多层编排；下游按树结构递归消费。 |
+| `primary_intent_code` | 表示当前轮主意图编码；通常与根节点下首个主执行意图一致。 |
+| `execution_plan.root` | 同时承载识别结果、串行/并行关系、执行顺序和嵌套结构，是下游优先消费的结构化字段。 |
+| `need_clarify=true` | 表示当前轮无法稳定生成执行计划，此时 `root` 返回空对象。 |
 
-## 6. 使用边界
+## 7. 使用边界
 
 - 本文只解释字段含义，不列字段具体值
 - 本文不包含 Python 节点接口、工作流节点编排或提示词实现细节

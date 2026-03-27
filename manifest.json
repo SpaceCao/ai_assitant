@@ -32,6 +32,12 @@
       "file": "wiki/HiAgent意图识别平台配置字段表.md",
       "title": "HiAgent意图识别平台配置字段表",
       "description": "将平台关键配置收敛为可直接复制的字段表"
+    },
+    {
+      "name": "HiAgent意图字段说明",
+      "file": "wiki/HiAgent意图字段说明.md",
+      "title": "HiAgent意图字段说明",
+      "description": "字段知识库使用的字段名称、类型和含义说明"
     }
   ],
   "decisionTree": {

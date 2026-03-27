@@ -14,8 +14,9 @@
 2. 大模型输出的 `intent_code` 是否符合 2.0 正式定义
 3. 大模型输出的 `target_agent` 是否符合 1.3 正式归属
 4. 大模型输出的 `collaboration_mode` 是否符合 2.3 协作模式
-5. 大模型输出的 `execution_plan` 是否能稳定表达单智能体或串行顺序
-6. 模糊输入是否优先进入澄清或闲聊兜底
+5. 大模型输出的 `execution_plan` 是否能稳定表达串行、并行和总体执行顺序
+6. 多层嵌套场景下，`execution_plan.root` 是否能稳定表达递归树结构
+7. 模糊输入是否优先进入澄清或闲聊兜底
 
 ## 2. 测试前置条件
 
@@ -66,28 +67,31 @@
 
 | 用例ID | 用户输入 | 预期主意图 | 预期 execution_plan | 说明 |
 |--------|----------|------------|--------------------|------|
-| TC026 | 帮我推荐点零食，顺便看看购物车 | `view_items` | `mode=serial; steps=[view_items, view_shop_cart]` | 有明确主诉求“推荐”，`顺便` 引出次级诉求，不应澄清 |
-| TC027 | 把这个加购物车，然后直接下单 | `add_shop_cart` | `mode=serial; steps=[add_shop_cart, place_order_oow]` | 有明确顺序词 `然后`，不应澄清 |
-| TC028 | 查一下这个订单，能不能顺便取消 | `query_order` 或澄清 | `若对象明确则 mode=serial; steps=[query_order, cancel_order]；若不明确则 mode=\"\"; steps=[]` | 只有在订单对象不明确时才澄清 |
-| TC029 | 推荐点适合老人的礼盒，再告诉我配料 | `view_items` | `mode=serial; steps=[view_items, knowledge_quiz]` | 有明确顺序词 `再`，先推荐后问答，不应澄清 |
-| TC030 | 我喜欢吃辣的东西，帮我推荐零食并下单 | `view_items` | `mode=serial; steps=[view_items, place_order_oow]` | “并下单”是复合意图连接词，不可只输出推荐意图 |
+| TC026 | 帮我推荐点零食，顺便看看购物车 | `view_items` | `root={node_type=group, run_mode=serial, children=[view_items, view_shop_cart]}` | 有明确主诉求“推荐”，`顺便` 引出次级诉求，不应澄清 |
+| TC027 | 把这个加购物车，然后直接下单 | `add_shop_cart` | `root={node_type=group, run_mode=serial, children=[add_shop_cart, place_order_oow]}` | 有明确顺序词 `然后`，不应澄清 |
+| TC028 | 查一下这个订单，能不能顺便取消 | `query_order` 或澄清 | `若对象明确则 root={node_type=group, run_mode=serial, children=[query_order, cancel_order]}；若不明确则 root={}` | 只有在订单对象不明确时才澄清 |
+| TC029 | 推荐点适合老人的礼盒，再告诉我配料 | `view_items` | `root={node_type=group, run_mode=serial, children=[view_items, knowledge_quiz]}` | 有明确顺序词 `再`，先推荐后问答，不应澄清 |
+| TC030 | 我喜欢吃辣的东西，帮我推荐零食并下单 | `view_items` | `root={node_type=group, run_mode=serial, children=[view_items, place_order_oow]}` | “并下单”是复合意图连接词，不可只输出推荐意图 |
+| TC031 | 一边帮我看看购物车，一边查一下订单 | `view_shop_cart` 或 `query_order` | `root={node_type=group, run_mode=parallel, children=[view_shop_cart, query_order]}` | 两个动作互不依赖且用户明确要求同时处理，应输出并行 group |
+| TC032 | 先帮我推荐低糖零食，再同时看看购物车和订单 | `view_items` | `root={node_type=group, run_mode=serial, children=[view_items, {node_type=group, run_mode=parallel, children=[view_shop_cart, query_order]}]}` | 验证串行里嵌套并行的递归树表达 |
 
 ## 6. 模糊与兜底样例
 
 | 用例ID | 用户输入 | 预期结果 | 说明 |
 |--------|----------|----------|------|
-| TC031 | 这个 | 需要澄清 | 指代不明 |
-| TC032 | 查一下 | 需要澄清 | 诉求不完整 |
-| TC033 | 都要 | 需要澄清 | 缺乏上下文 |
-| TC034 | 在吗 | 闲聊回复 | 闲聊兜底 |
+| TC033 | 这个 | 需要澄清 | 指代不明 |
+| TC034 | 查一下 | 需要澄清 | 诉求不完整 |
+| TC035 | 都要 | 需要澄清 | 缺乏上下文 |
+| TC036 | 在吗 | 闲聊回复 | 闲聊兜底 |
 
 ## 7. 验收标准
 
 - Python 前置节点稳定返回 `intents`
 - 高频样例命中率 >= 90%
 - `intent_code`、`target_agent`、`collaboration_mode` 输出一致
-- `execution_plan.mode`、`execution_plan.steps` 与主意图和协作顺序一致，且当前阶段不输出 `parallel`
-- 多意图输入能稳定输出一个主意图，且 `execution_plan.steps` 合理
+- `execution_plan.root`、`node_type`、`run_mode`、`children` 与主意图和协作顺序一致
+- 多意图输入能稳定输出一个主意图，且 `execution_plan.root` 合理
+- 嵌套场景能稳定输出递归树，不混用旧版 `stages` 结构
 - 模糊输入优先进入澄清或闲聊兜底
 - `reason_text` 应能解释分类依据
 
@@ -113,6 +117,8 @@
 - TC027
 - TC030
 - TC031
+- TC032
+- TC033
 
 ## 9. 缺陷记录模板
 
