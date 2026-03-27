@@ -14,7 +14,8 @@
 2. 大模型输出的 `intent_code` 是否符合 2.0 正式定义
 3. 大模型输出的 `target_agent` 是否符合 1.3 正式归属
 4. 大模型输出的 `collaboration_mode` 是否符合 2.3 协作模式
-5. 模糊输入是否优先进入澄清或闲聊兜底
+5. 大模型输出的 `execution_plan` 是否能稳定表达单智能体或串行顺序
+6. 模糊输入是否优先进入澄清或闲聊兜底
 
 ## 2. 测试前置条件
 
@@ -22,8 +23,9 @@
 
 1. Python 前置节点 `intent_mapping_workflow` 已执行成功
 2. 前置节点输出中存在 `intents`
-3. 大模型节点用户提示词已正确引用 `{{intent_mapping_workflow.intents}}`
-4. 选择器按 `need_clarify` 分流
+3. 大模型节点用户提示词已正确引用 `{{intents}}`
+4. 如果已接入字段知识库，用户提示词已正确引用字段含义检索结果变量
+5. 选择器按 `need_clarify` 分流
 
 ## 3. 高优先级回归样例
 
@@ -62,28 +64,30 @@
 
 ## 5. 多意图样例
 
-| 用例ID | 用户输入 | 预期主意图 | 预期 secondary_intent_codes | 说明 |
-|--------|----------|------------|-------------------------|------|
-| TC026 | 帮我推荐点零食，顺便看看购物车 | `view_items` | `view_shop_cart` | 当前优先做推荐，购物车为次级诉求 |
-| TC027 | 把这个加购物车，然后直接下单 | `add_shop_cart` | `place_order_oow` | 当前应先完成加购，再处理下单 |
-| TC028 | 查一下这个订单，能不能顺便取消 | `query_order` 或澄清 | `cancel_order` | 若订单对象不明确，可转澄清 |
-| TC029 | 推荐点适合老人的礼盒，再告诉我配料 | `view_items` | `knowledge_quiz` | 推荐为主，商品知识为次级 |
+| 用例ID | 用户输入 | 预期主意图 | 预期 execution_plan | 说明 |
+|--------|----------|------------|--------------------|------|
+| TC026 | 帮我推荐点零食，顺便看看购物车 | `view_items` | `mode=serial; steps=[view_items, view_shop_cart]` | 有明确主诉求“推荐”，`顺便` 引出次级诉求，不应澄清 |
+| TC027 | 把这个加购物车，然后直接下单 | `add_shop_cart` | `mode=serial; steps=[add_shop_cart, place_order_oow]` | 有明确顺序词 `然后`，不应澄清 |
+| TC028 | 查一下这个订单，能不能顺便取消 | `query_order` 或澄清 | `若对象明确则 mode=serial; steps=[query_order, cancel_order]；若不明确则 mode=\"\"; steps=[]` | 只有在订单对象不明确时才澄清 |
+| TC029 | 推荐点适合老人的礼盒，再告诉我配料 | `view_items` | `mode=serial; steps=[view_items, knowledge_quiz]` | 有明确顺序词 `再`，先推荐后问答，不应澄清 |
+| TC030 | 我喜欢吃辣的东西，帮我推荐零食并下单 | `view_items` | `mode=serial; steps=[view_items, place_order_oow]` | “并下单”是复合意图连接词，不可只输出推荐意图 |
 
 ## 6. 模糊与兜底样例
 
 | 用例ID | 用户输入 | 预期结果 | 说明 |
 |--------|----------|----------|------|
-| TC030 | 这个 | 需要澄清 | 指代不明 |
-| TC031 | 查一下 | 需要澄清 | 诉求不完整 |
-| TC032 | 都要 | 需要澄清 | 缺乏上下文 |
-| TC033 | 在吗 | 闲聊回复 | 闲聊兜底 |
+| TC031 | 这个 | 需要澄清 | 指代不明 |
+| TC032 | 查一下 | 需要澄清 | 诉求不完整 |
+| TC033 | 都要 | 需要澄清 | 缺乏上下文 |
+| TC034 | 在吗 | 闲聊回复 | 闲聊兜底 |
 
 ## 7. 验收标准
 
 - Python 前置节点稳定返回 `intents`
 - 高频样例命中率 >= 90%
 - `intent_code`、`target_agent`、`collaboration_mode` 输出一致
-- 多意图输入能稳定输出一个主意图，且 `secondary_intent_codes` 合理
+- `execution_plan.mode`、`execution_plan.steps` 与主意图和协作顺序一致，且当前阶段不输出 `parallel`
+- 多意图输入能稳定输出一个主意图，且 `execution_plan.steps` 合理
 - 模糊输入优先进入澄清或闲聊兜底
 - `reason_text` 应能解释分类依据
 
@@ -108,6 +112,7 @@
 - TC026
 - TC027
 - TC030
+- TC031
 
 ## 9. 缺陷记录模板
 

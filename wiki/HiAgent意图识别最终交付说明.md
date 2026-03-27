@@ -30,10 +30,10 @@ Start
 
 - `Start` 提供用户输入 `query`
 - `Python` 前置节点负责输出 `intents` 和 `default_clarify_question`
-- `大模型` 只根据前置节点输出做结构化识别
+- `大模型` 只根据前置节点输出做结构化识别，并输出下游可直接消费的 `execution_plan`
 - `选择器` 负责按 `need_clarify` 分流
 - `消息` 仅用于澄清
-- `intents_analysis` 当前只做记录，不参与本轮路由
+- `execution_plan` 同时承载识别结果和下游执行顺序
 
 ## 3. 交付物清单
 
@@ -107,7 +107,7 @@ Start
 - Python 前置节点输出的 `intents` 是否完整
 - 高频样例识别是否稳定
 - 边界样例是否明显误判
-- 多意图输入是否能稳定输出主意图，`intents_analysis` 是否合理
+- 多意图输入是否能稳定输出主意图，`execution_plan.steps` 是否合理
 - 模糊输入是否优先落到 `need_clarify=true`
 - `reason_text` 是否有解释价值
 
@@ -149,19 +149,15 @@ Start
 6. 大模型节点已显式映射输出字段：
 
 ```text
-intent_name_cn
-intent_code
-target_agent
-collaboration_mode
 need_clarify
 clarify_question
 reason_text
 primary_intent_code
-intents_analysis
+execution_plan
 ```
 
 7. 选择器只按 `need_clarify` 分流
-8. `intents_analysis` 当前只记录，不参与本轮路由
+8. `execution_plan` 已显式映射并可被下游直接消费
 
 ### 10.2 联调清单
 
@@ -172,7 +168,8 @@ intents_analysis
 3. 输出的 `intent_code` 必须存在于 `intents`
 4. 输出的 `target_agent`、`collaboration_mode` 必须与前置配置一致
 5. 模糊输入能正确走 `need_clarify=true`
-6. 多意图输入能输出一个主意图和合理的 `intents_analysis`
+6. 多意图输入能输出一个主意图和合理的 `execution_plan.steps`
+7. `execution_plan` 能稳定表达单智能体或串行的执行顺序
 
 ### 10.3 回归清单
 
@@ -196,6 +193,7 @@ intents_analysis
 - 高频场景识别稳定
 - 模糊输入优先澄清
 - 多意图输入主次关系基本正确
+- `execution_plan` 结构稳定，且与主意图、协作顺序一致；当前阶段不输出 `parallel`
 - 无明显越权输出，不能出现 `intents` 之外的 `intent_code`
 - 无明显格式错误，输出 JSON 可被平台稳定解析
 
@@ -205,6 +203,7 @@ intents_analysis
 
 1. 高频误判 Top case
 2. 澄清触发率是否过高
-3. 多意图输入中 `intents_analysis` 是否稳定
-4. 是否出现未定义 `intent_code`
-5. 是否出现主意图和 `target_agent` 不一致
+3. 多意图输入中 `execution_plan.steps` 是否稳定
+4. `execution_plan` 是否出现顺序错乱
+5. 是否出现未定义 `intent_code`
+6. 是否出现主意图和 `target_agent` 不一致
