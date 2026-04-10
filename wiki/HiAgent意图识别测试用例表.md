@@ -48,6 +48,9 @@
 | TC014 | 会员有什么权益 | 知识问答 | `knowledge_quiz` | 问答Agent |
 | TC015 | 这个配料是什么 | 知识问答 | `knowledge_quiz` | 问答Agent |
 | TC016 | 运费怎么算 | 知识问答 | `knowledge_quiz` | 问答Agent |
+| TC017 | 我不吃海鲜 | 偏好忌口 | `user_preference` | 用户 Agent |
+| TC018 | 我对花生过敏 | 偏好忌口 | `user_preference` | 用户 Agent |
+| TC019 | 记住我喜欢低糖食品 | 偏好忌口 | `user_preference` | 用户 Agent |
 | TC017 | 你好 | 闲聊回复 | `casual_reply` | 闲聊Agent |
 | TC018 | 谢谢 | 闲聊回复 | `casual_reply` | 闲聊Agent |
 

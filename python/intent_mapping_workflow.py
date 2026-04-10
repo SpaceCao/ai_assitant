@@ -15,9 +15,9 @@ HiAgent 意图配置工作流接口：
 
 
 INTENT_CONFIG = {
-    "version": "2.0.0",
-    "updated_at": "2026-03-26",
-    "source_of_truth": "docs/来伊份 AI 导购助手 HiAgent 架构文档 V1.0.pdf 1.3 / 2.0 / 2.3",
+    "version": "2.1.0",
+    "updated_at": "2026-04-09",
+    "source_of_truth": "docs/来伊份 AI 导购助手 HiAgent 架构文档 V1.1.pdf 1.3 / 2.0 / 2.3",
     "default_clarify_question": "请问您现在是想让我帮您推荐商品、查看购物车、加入购物车、确认订单，还是查询订单？",
     "intents": [
         {
@@ -129,6 +129,16 @@ INTENT_CONFIG = {
             "examples": ["你好", "谢谢", "在吗"],
             "priority": 0,
             "enabled": True
+        },
+        {
+            "intent_name_cn": "偏好忌口",
+            "intent_code": "user_preference",
+            "target_agent": "用户 Agent",
+            "collaboration_mode": "single",
+            "description": "用户希望记录或更新个人偏好、忌口、过敏原等信息。",
+            "examples": ["我不吃海鲜", "我对花生过敏", "记住我喜欢低糖食品"],
+            "priority": 70,
+            "enabled": True
         }
     ],
     "mapping_rules": [
@@ -137,7 +147,8 @@ INTENT_CONFIG = {
         "collaboration_mode 严格采用架构文档 2.3 定义。",
         "交易域动作统一由交易Agent承接，不再拆分购物车Agent或订单Agent。",
         "FAQ、商品知识、规则咨询统一收敛到 knowledge_quiz -> 问答Agent。",
-        "闲聊统一收敛到 casual_reply -> 闲聊Agent。"
+        "闲聊统一收敛到 casual_reply -> 闲聊 Agent。",
+        "用户偏好、忌口、过敏原记录统一收敛到 user_preference -> 用户 Agent。",
     ]
 }
 

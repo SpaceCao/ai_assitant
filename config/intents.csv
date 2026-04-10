@@ -10,3 +10,4 @@ intent_name_cn,intent_code,target_agent,collaboration_mode,description,examples,
 "查询订单","query_order","交易Agent","single","用户希望查询订单信息，包含订单状态或订单详情。","我的订单；查询订单；订单状态怎么样","95","true"
 "知识问答","knowledge_quiz","问答Agent","single","用户希望咨询 FAQ、商品知识或规则问题。","会员有什么权益；这个配料是什么；运费怎么算","85","true"
 "闲聊回复","casual_reply","闲聊Agent","single","用户进行非业务闲聊、寒暄或感谢。","你好；谢谢；在吗","0","true"
+"偏好忌口","user_preference","用户 Agent","single","用户希望记录或更新个人偏好、忌口、过敏原等信息。","我不吃海鲜；我对花生过敏；记住我喜欢低糖食品","70","true"
