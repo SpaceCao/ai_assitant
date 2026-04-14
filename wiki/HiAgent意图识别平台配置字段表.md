@@ -116,6 +116,9 @@ intent_mapping_workflow
 - “查一下这个订单，能不能顺便取消”这类输入，如果订单对象明确则先查询再取消；如果对象不明确则澄清
 - 只有当两个动作互不依赖、且用户明确表达要同时处理时，才允许放入同一个 parallel group
 - 多意图并列且无法判断先后时，返回澄清，不输出猜测性的执行计划
+- 输入可能包含错别字、同音字、口语化表达，应先做语义理解再匹配意图
+- casual_reply 是兜底意图，当输入不属于其他业务意图时，优先归闲聊，不要轻易澄清
+- 只有输入明显是乱码、无意义字符或完全无法理解时，才返回 need_clarify=true
 
 输出 JSON 格式如下：
 {
@@ -175,6 +178,8 @@ primary_intent_code, need_clarify, clarify_question, reason_text, execution_plan
 11. 如果无法稳定判断第一执行步，则 need_clarify=true，同时 primary_intent_code 为空字符串，execution_plan.root 返回空对象
 12. execution_plan.root 没有结果时返回空对象
 13. 只输出 JSON
+14. 用户输入可能包含错别字或同音字，请先理解语义再判断意图
+15. 无法匹配业务意图时优先归 casual_reply，只有乱码或完全无法理解才澄清
 ```
 
 ### 1.4 选择器

@@ -125,8 +125,8 @@ INTENT_CONFIG = {
             "intent_code": "casual_reply",
             "target_agent": "闲聊Agent",
             "collaboration_mode": "single",
-            "description": "用户进行非业务闲聊、寒暄或感谢。",
-            "examples": ["你好", "谢谢", "在吗"],
+            "description": "兜底意图。当用户输入不属于其他任何意图时，归为闲聊。",
+            "examples": ["你好", "谢谢", "今天天气怎么样", "你真可爱"],
             "priority": 0,
             "enabled": True
         },
